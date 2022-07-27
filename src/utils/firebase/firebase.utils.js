@@ -1,16 +1,19 @@
 import { initializeApp } from 'firebase/app';
+
 import { 
     getAuth,
     signInWithRedirect,
     signInWithPopup,
-    GoogleAuthProvider 
+    GoogleAuthProvider,
+    createUserWithEmailAndPassword,
 } from 'firebase/auth';
+
 import {
   getFirestore,
   doc,
   getDoc,
   setDoc
-}from 'firebase/firestore'
+}from 'firebase/firestore';
 
 const firebaseConfig = {
     apiKey: "AIzaSyC7K5_kkXEzJcpeu7MBhch6rTb0g3izn5s",
@@ -23,17 +26,21 @@ const firebaseConfig = {
   
   const firebaseApp = initializeApp(firebaseConfig);
 
-  const provider = new GoogleAuthProvider();
+  const googleprovider = new GoogleAuthProvider();
 
-  provider.setCustomParameters({
+  googleprovider.setCustomParameters({
     prompt: 'select_account',
   });
 
   export const auth = getAuth();
-  export const signInWithGooglePopup = ()  => signInWithPopup(auth,provider);
+  export const signInWithGooglePopup = ()  => signInWithPopup(auth,googleprovider);
+  export const signInWithGoogleRedirect = () => signInWithRedirect(auth,googleprovider);
 
   export const db = getFirestore();
-  export const createUserDocumentFromAuth = async(userAuth) => {
+  export const createUserDocumentFromAuth = async(
+    userAuth,
+    additionalinformation = {displayName:'mike'}
+    ) => {
     const userDocRef = doc(db,'users',userAuth.uid);
 
     const userSnapshot = await getDoc(userDocRef);
@@ -46,7 +53,8 @@ const firebaseConfig = {
         await setDoc(userDocRef,{
           displayName,
           email,
-          createAt
+          createAt,
+          ...additionalinformation
         })
       } catch(error){
         console.log('error creating the user',error.message);
@@ -55,6 +63,12 @@ const firebaseConfig = {
     }
 
     return userDocRef;
+  };
+
+    export const createAuthUserWithEmailAndPassword = async (email, password) => {
+      if (!email || !password) return;
+    
+      return await createUserWithEmailAndPassword(auth, email, password);
     // if user date exists
     // if user date does not exists
     // return userDocRef
